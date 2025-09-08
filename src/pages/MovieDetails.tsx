@@ -43,6 +43,15 @@ export default function MovieDetails() {
     if (id) loadMovieDetails(parseInt(id));
   }, [id]);
 
+  useEffect(() => {
+    // Check if this movie is already in favorites
+    const stored = localStorage.getItem("favorites");
+    if (stored && movie) {
+      const favs = JSON.parse(stored) as any[];
+      setIsFav(favs.some((m) => m.id === movie.id));
+    }
+  }, [movie]);
+
   const loadMovieDetails = async (movieId: number) => {
     try {
       setIsLoading(true);
@@ -68,12 +77,37 @@ export default function MovieDetails() {
     dateString ? new Date(dateString).getFullYear() : "N/A";
   const formatRating = (rating: number) => (rating ? rating.toFixed(1) : "N/A");
 
+  const toggleFavorite = () => {
+    if (!movie) return;
+
+    const stored = localStorage.getItem("favorites");
+    let favs: any[] = stored ? JSON.parse(stored) : [];
+
+    if (isFav) {
+      // Remove from favorites
+      favs = favs.filter((m) => m.id !== movie.id);
+      setIsFav(false);
+    } else {
+      // Add to favorites
+      favs.push({
+        id: movie.id,
+        title: movie.title,
+        posterUrl: getImageUrl(movie.poster_path ?? "", "w500"),
+        year: formatYear(movie.release_date),
+      });
+      setIsFav(true);
+    }
+
+    localStorage.setItem("favorites", JSON.stringify(favs));
+  };
+
   if (isLoading)
     return (
       <div className="movie-details-loading">
         <div className="loading-text">Loading...</div>
       </div>
     );
+
   if (!movie)
     return (
       <div className="movie-details-loading">
@@ -109,7 +143,7 @@ export default function MovieDetails() {
                   <h1>{movie.title}</h1>
                   <button
                     className={`fav-button ${isFav ? "active" : ""}`}
-                    onClick={() => setIsFav(!isFav)}
+                    onClick={toggleFavorite}
                   >
                     <Heart className="heart-icon" />
                     {isFav ? "Added to Favorites" : "Add to Favorites"}

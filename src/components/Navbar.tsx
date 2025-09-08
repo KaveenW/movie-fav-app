@@ -1,14 +1,23 @@
 import { NavLink } from "react-router-dom";
-import { FaFilm, FaHome, FaHeart } from "react-icons/fa";
+import { FaFilm, FaHome, FaHeart, FaMoon, FaSun } from "react-icons/fa";
 import { useEffect, useState } from "react";
 
 function Navbar() {
   const [scrolled, setScrolled] = useState(false);
+  const [theme, setTheme] = useState(localStorage.getItem("theme") || "dark");
 
   useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20); // start fading after 20px scroll
-    };
+    // Apply theme on mount
+    if (theme === "dark") {
+      document.body.classList.add("dark");
+    } else {
+      document.body.classList.remove("dark");
+    }
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  useEffect(() => {
+    const handleScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
@@ -39,6 +48,15 @@ function Navbar() {
         >
           <FaHeart /> Favorites
         </NavLink>
+
+        {/* Theme toggle button */}
+        <button
+          className="theme-toggle"
+          onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          title={`Switch to ${theme === "dark" ? "light" : "dark"} mode`}
+        >
+          {theme === "dark" ? <FaSun /> : <FaMoon />}
+        </button>
       </nav>
     </header>
   );
