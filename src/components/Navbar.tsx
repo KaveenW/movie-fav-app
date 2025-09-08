@@ -1,17 +1,28 @@
 import { NavLink } from "react-router-dom";
 import { FaFilm, FaHome, FaHeart } from "react-icons/fa";
-import index from "../index.css";
+import { useEffect, useState } from "react";
 
 function Navbar() {
+  const [scrolled, setScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20); // start fading after 20px scroll
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
-    <header className="nav">
+    <header className={`nav ${scrolled ? "nav-scrolled" : ""}`}>
       <div className="brand">
         <NavLink
           to="/"
           end
           className={({ isActive }) => (isActive ? "active" : "")}
         >
-          <FaFilm /> CineMax
+          <FaFilm />
+          <span className="brand-text">CinemaHub</span>
         </NavLink>
       </div>
       <nav>

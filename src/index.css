@@ -7,7 +7,7 @@ body {
   font-family: Arial, sans-serif;
   margin: 0;
   padding: 0;
-  background-color: hsl(240 8% 20%);
+  background-color: hsl(240, 5%, 11%);
 }
 
 .nav {
@@ -18,26 +18,58 @@ body {
   background: hsl(240 8% 20%);
   border-bottom: 1px solid #444548;
   z-index: 10;
-  padding-top: 15px;
-  padding-bottom: 15px;
-  padding-left: 24px;
-  padding-right: 15px;
+  padding: 15px 24px 15px 15px;
+  transition: background 0.3s ease, backdrop-filter 0.3s ease;
 }
 
+/* When scrolling, make navbar slightly transparent with blur */
+.nav.nav-scrolled {
+  background: rgba(36, 40, 55, 0.8); /* semi-transparent dark */
+  backdrop-filter: blur(8px);       /* optional: adds glassy blur effect */
+}
 .nav .brand {
   display: flex;
   align-items: center;
-  gap: 6px;
-  font-weight: 700;
+  gap: 10px;
 }
 
 .nav .brand a {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
   text-decoration: none;
-  color: #e5e7eb; /* light text color */
-  font-size: 1.2rem;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: #e5e7eb;
+  transition: all 0.3s ease;
+}
+
+.nav .brand a {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #f0f0f0; /* subtle off-white */
+  transition: color 0.3s ease, transform 0.2s ease;
+}
+
+/* Slight emphasis on hover */
+.nav .brand a:hover {
+  color: #ffdd59; /* soft cinematic yellow */
+  transform: scale(1.05);
+}
+
+/* Optional: slightly separate “Hub” */
+.brand-text {
+  letter-spacing: 0.5px;
+}
+
+
+/* Optional: make 'Hub' pop with a slight glow */
+.brand-text .highlight {
+  text-shadow: 0 0 8px #facc15, 0 0 12px #3b82f6;
 }
 
 .nav nav {
@@ -89,7 +121,36 @@ body {
   color: transparent;
 }
 
+.center-piece h2{
+  text-align: center;
+  margin-bottom: 40px;
+  color: white;
+}
 
+.center-piece p{
+  text-align: center;
+  margin-bottom: 20px;
+  color: #d1d5db; /* lighter gray for paragraph */
+  font-size: 1.1rem;
+  max-width: 600px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.center-piece {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin: 60px 0;
+  padding: 40px 20px;
+}
+
+.center-piece svg {
+  display: block;       /* makes the icon block-level */
+  margin: 0 auto 20px;  /* centers horizontally and adds spacing below */
+}
 
 /* Search Bar */
 .search {
@@ -153,7 +214,6 @@ body {
 .search button:hover {
   background-color: #1679d6;
 }
-
 
 
 
@@ -228,8 +288,6 @@ body {
   opacity: 0.9;
 }
 
-
-
 .movie-info {
   padding: 12px 16px;
   text-align: left;
@@ -264,4 +322,278 @@ body {
   color: #ffffff; /* calendar icon yellow */
 }
 
+
+
+.filters {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 20px auto;
+}
+
+.filters select,
+.filters input,
+.filters button {
+  background-color: #151a23;
+  color: white;
+  border: 1px solid #2c3344;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  cursor: pointer;
+}
+
+.filters button {
+  background-color: hsl(var(--primary));
+  color: black;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.filters button:hover {
+  background-color: #3b82f6;
+}
+
+
+/* Movie grid */
+.movie-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  margin-top: 20px;
+}
+
+
+/* Movie Details Page */
+.movie-details-page {
+  color: white;
+}
+
+.movie-hero {
+  position: relative;
+  min-height: 70vh;
+  background-size: cover;
+  background-position: center;
+  /* Add a pseudo-element to handle fade without box */
+}
+
+.movie-hero::after {
+  content: "";
+  position: absolute;
+  inset: 0; /* cover entire hero */
+  background: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 50%,       /* fully transparent at top/middle */
+    rgba(11, 12, 17, 1) 100%    /* fade to body background at bottom */
+  );
+  pointer-events: none;
+}
+
+.movie-hero-content {
+  position: relative; /* ensure content sits above pseudo-element */
+  display: flex;
+  gap: 2rem;
+  align-items: flex-end;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding-bottom: 2rem;
+  width: 100%;
+  z-index: 1;
+}
+
+
+.movie-hero-poster {
+  width: 200px;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
+  transition: transform 0.3s ease;
+}
+
+.movie-hero-poster:hover {
+  transform: scale(1.05);
+}
+
+.movie-hero-info h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.fav-button {
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  border-radius: 50%;
+  padding: 10px;
+  cursor: pointer;
+  transition: background 0.3s;
+}
+
+.fav-button.active {
+  background: #e11d48;
+}
+
+.movie-stats {
+  display: flex;
+  gap: 1.5rem;
+  margin: 1rem 0;
+  font-size: 0.95rem;
+  opacity: 0.9;
+}
+
+.movie-stats svg {
+  vertical-align: middle;
+  margin-right: 5px;
+}
+
+.movie-genres span {
+  background: #374151;
+  padding: 5px 12px;
+  border-radius: 20px;
+  margin-right: 8px;
+  font-size: 0.85rem;
+}
+
+.movie-overview {
+  max-width: 800px;
+  margin-top: 10px;
+  font-size: 1rem;
+  line-height: 1.6;
+}
+
+
+.back-link {
+  max-width: 1200px;
+  margin: 20px auto;
+  padding: 0 2rem;
+}
+
+.back-link a {
+  color: #9ca3af;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.back-link a:hover {
+  color: white;
+}
+
+/* Cast */
+.cast-section {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 2rem;
+}
+
+.cast-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+}
+
+.cast-card img {
+  border-radius: 8px;
+  width: 100%;
+  object-fit: cover;
+}
+
+.cast-card h3 {
+  margin: 0.5rem 0 0;
+  font-size: 0.9rem;
+}
+
+.cast-card p {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #9ca3af;
+}
+
+/* Recommendations */
+.recommendations-section {
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 2rem;
+}
+
+
+
+.no-results-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  margin: 60px 0;
+  padding: 40px 20px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.no-results-section h2 {
+  font-size: 2rem;
+  margin-top: 20px;
+  margin-bottom: 12px;
+  color: white;
+}
+
+.no-results-section p {
+  font-size: 1rem;
+  color: #d1d5db;
+  max-width: 400px;
+  line-height: 1.5;
+}
+
+.no-results-icon {
+  font-size: 3rem;
+  margin-bottom: 10px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
+.fav-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background-color: rgba(255, 255, 255, 0.1);
+  color: #f0f0f0;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s, transform 0.2s;
+}
+
+.fav-button:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  transform: scale(1.05);
+}
+
+/* Active state when added */
+.fav-button.active {
+  background-color: #e11d48; /* red */
+  color: white;
+}
+
+.fav-button .heart-icon {
+  transition: transform 0.3s;
+}
+
+/* Optional: Heart pops when active */
+.fav-button.active .heart-icon {
+  transform: scale(1.2) rotate(-20deg);
+}
 
