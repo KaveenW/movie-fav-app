@@ -10,6 +10,9 @@ import {
 } from "../api/tmdb";
 import Navbar from "../components/Navbar";
 import MovieCard from "../components/MovieCard";
+import { auth, db } from "../firebaseConfig";
+import { onAuthStateChanged } from "firebase/auth";
+import { doc, setDoc, deleteDoc, getDoc } from "firebase/firestore";
 
 type CastMember = {
   id: number;
@@ -38,19 +41,34 @@ export default function MovieDetails() {
   const [recommendations, setRecommendations] = useState<Movie[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isFav, setIsFav] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) loadMovieDetails(parseInt(id));
   }, [id]);
 
+  // ✅ Track auth state
   useEffect(() => {
-    // Check if this movie is already in favorites
-    const stored = localStorage.getItem("favorites");
-    if (stored && movie) {
-      const favs = JSON.parse(stored) as any[];
-      setIsFav(favs.some((m) => m.id === movie.id));
-    }
-  }, [movie]);
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setUserId(user ? user.uid : null);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  // ✅ Check if movie is in favorites (only when movie + userId are loaded)
+  useEffect(() => {
+    const checkFavorite = async () => {
+      if (!userId || !movie) return;
+      try {
+        const favRef = doc(db, "users", userId, "favorites", String(movie.id));
+        const favSnap = await getDoc(favRef);
+        setIsFav(favSnap.exists());
+      } catch (error) {
+        console.error("Error checking favorite:", error);
+      }
+    };
+    checkFavorite();
+  }, [userId, movie]);
 
   const loadMovieDetails = async (movieId: number) => {
     try {
@@ -77,28 +95,31 @@ export default function MovieDetails() {
     dateString ? new Date(dateString).getFullYear() : "N/A";
   const formatRating = (rating: number) => (rating ? rating.toFixed(1) : "N/A");
 
-  const toggleFavorite = () => {
-    if (!movie) return;
-
-    const stored = localStorage.getItem("favorites");
-    let favs: any[] = stored ? JSON.parse(stored) : [];
-
-    if (isFav) {
-      // Remove from favorites
-      favs = favs.filter((m) => m.id !== movie.id);
-      setIsFav(false);
-    } else {
-      // Add to favorites
-      favs.push({
-        id: movie.id,
-        title: movie.title,
-        posterUrl: getImageUrl(movie.poster_path ?? "", "w500"),
-        year: formatYear(movie.release_date),
-      });
-      setIsFav(true);
+  // ✅ Firestore-based favorite toggling
+  const toggleFavorite = async () => {
+    if (!movie || !userId) {
+      alert("Please log in to save favorites.");
+      return;
     }
 
-    localStorage.setItem("favorites", JSON.stringify(favs));
+    const favRef = doc(db, "users", userId, "favorites", String(movie.id));
+
+    try {
+      if (isFav) {
+        await deleteDoc(favRef);
+        setIsFav(false);
+      } else {
+        await setDoc(favRef, {
+          id: movie.id,
+          title: movie.title,
+          posterUrl: getImageUrl(movie.poster_path ?? "", "w500"),
+          year: formatYear(movie.release_date),
+        });
+        setIsFav(true);
+      }
+    } catch (error) {
+      console.error("Error toggling favorite:", error);
+    }
   };
 
   if (isLoading)
@@ -141,15 +162,16 @@ export default function MovieDetails() {
               <div className="movie-hero-info">
                 <div className="movie-hero-header">
                   <h1>{movie.title}</h1>
-                  <button
-                    className={`fav-button ${isFav ? "active" : ""}`}
-                    onClick={toggleFavorite}
-                  >
-                    <Heart className="heart-icon" />
-                    {isFav ? "Added to Favorites" : "Add to Favorites"}
-                  </button>
+
+                  {/* ✅ Only show button if user is logged in */}
                 </div>
+
                 {movie.tagline && <p className="tagline">"{movie.tagline}"</p>}
+                <div className="movie-genres">
+                  {movie.genres.map((g) => (
+                    <span key={g.id}>{g.name}</span>
+                  ))}
+                </div>
                 <div className="movie-stats">
                   <span>
                     <Star /> {formatRating(movie.vote_average)} (
@@ -162,12 +184,6 @@ export default function MovieDetails() {
                     <Clock /> {formatRuntime(movie.runtime)}
                   </span>
                 </div>
-                <div className="movie-genres">
-                  {movie.genres.map((g) => (
-                    <span key={g.id}>{g.name}</span>
-                  ))}
-                </div>
-                <p className="movie-overview">{movie.overview}</p>
               </div>
             </div>
           </div>
@@ -178,6 +194,22 @@ export default function MovieDetails() {
             <ArrowLeft /> Back to Movies
           </Link>
         </div>
+
+        <div className="fav-section">
+          {userId && (
+            <button
+              className={`fav-button ${isFav ? "active" : ""}`}
+              onClick={toggleFavorite}
+            >
+              <Heart className="heart-icon" />
+              {isFav ? "Added to Favorites" : "Add to Favorites"}
+            </button>
+          )}
+        </div>
+        <section className="movie-info-section">
+          <h2>Overview</h2>
+          <p className="movie-overview">{movie.overview}</p>
+        </section>
 
         {cast.length > 0 && (
           <section className="cast-section">

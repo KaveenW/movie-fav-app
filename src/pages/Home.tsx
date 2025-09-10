@@ -15,7 +15,6 @@ export default function Home() {
   // Filters
   const [genre, setGenre] = useState("");
   const [year, setYear] = useState<number | "">("");
-  const [rating, setRating] = useState<number | "">("");
 
   const genresList = [
     { id: 28, name: "Action" },
@@ -36,7 +35,6 @@ export default function Home() {
     const results = await searchMovies(searchQuery, pageNum, {
       genre: genre || undefined,
       year: year ? Number(year) : undefined,
-      minRating: rating ? Number(rating) : undefined,
     });
 
     if (pageNum === 1) setSearchResults(results);
@@ -50,6 +48,11 @@ export default function Home() {
     setQuery(searchQuery);
     setPage(1);
     fetchMovies(searchQuery, 1);
+  };
+
+  const handleApplyFilters = () => {
+    setPage(1);
+    fetchMovies(query, 1); // Will fetch based on current query + genre/year
   };
 
   const loadMore = () => {
@@ -70,54 +73,39 @@ export default function Home() {
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, [page, hasMore, loading, query, genre, year, rating]);
+  }, [page, hasMore, loading, query, genre, year]);
 
   return (
     <main className="home-container" ref={containerRef}>
       <SearchBar onSearch={handleSearch} />
 
-      {/* Filters only appear after first search */}
-      {query && (
-        <div className="filters">
-          <select value={genre} onChange={(e) => setGenre(e.target.value)}>
-            <option value="">All Genres</option>
-            {genresList.map((g) => (
-              <option key={g.id} value={g.id}>
-                {g.name}
-              </option>
-            ))}
-          </select>
+      {/* Filters */}
+      <div className="filters">
+        <select value={genre} onChange={(e) => setGenre(e.target.value)}>
+          <option value="">All Genres</option>
+          {genresList.map((g) => (
+            <option key={g.id} value={g.id}>
+              {g.name}
+            </option>
+          ))}
+        </select>
 
-          <input
-            type="number"
-            placeholder="Year"
-            value={year}
-            onChange={(e) => setYear(Number(e.target.value) || "")}
-          />
+        <input
+          type="number"
+          placeholder="Year"
+          value={year}
+          onChange={(e) => setYear(Number(e.target.value) || "")}
+        />
 
-          <select
-            value={rating}
-            onChange={(e) => setRating(Number(e.target.value) || "")}
-          >
-            <option value="">All Ratings</option>
-            <option value={5}>5+ ⭐</option>
-            <option value={6}>6+ ⭐</option>
-            <option value={7}>7+ ⭐</option>
-            <option value={8}>8+ ⭐</option>
-          </select>
-
-          <button onClick={() => handleSearch(query)}>Apply</button>
-        </div>
-      )}
+        <button onClick={handleApplyFilters}>Apply</button>
+      </div>
 
       {/* Welcome Message */}
       {!loading && searchResults.length === 0 && query === "" && (
         <div className="center-piece">
           <GiStarSwirl size={70} color="#f39c12" />
           <h2>Welcome to CineMax</h2>
-          <p>
-            Start by searching for your favorite movies and discover new ones!
-          </p>
+          <p>Start by selecting a genre or searching for a movie!</p>
         </div>
       )}
 
@@ -149,9 +137,7 @@ export default function Home() {
         <div className="no-results-section">
           <div className="no-results-icon">🎬</div>
           <h2>No Movies Found</h2>
-          <p>
-            Try searching for a different movie title or check your spelling
-          </p>
+          <p>Try selecting a different genre or year</p>
         </div>
       )}
     </main>

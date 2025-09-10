@@ -15,17 +15,30 @@ const api = axios.create({
 /**
  * Search movies by title
  */
-export async function searchMovies(query: string, page: number = 1, p0: { genre: string | undefined; year: number | undefined; minRating: number | undefined; }) {
+export async function searchMovies(query: string, page: number = 1, filters: { genre?: string; year?: number }) {
   try {
-    const response = await api.get("/search/movie", {
-      params: { query, page },
-    });
+    const params: any = {
+      api_key: API_KEY,
+      language: "en-US",
+      page,
+    };
+
+    if (query) params.query = query;
+
+    if (filters.genre) params.with_genres = filters.genre;
+    if (filters.year) params.primary_release_year = filters.year;
+
+    // Decide endpoint based on whether query exists
+    const endpoint = query ? "/search/movie" : "/discover/movie";
+
+    const response = await api.get(endpoint, { params });
     return response.data.results || [];
   } catch (error) {
     console.error("Error searching movies:", error);
     return [];
   }
 }
+
 
 /**
  * Get full movie details by ID
