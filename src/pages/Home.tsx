@@ -4,19 +4,33 @@ import MovieCard from "../components/MovieCard";
 import { searchMovies } from "../api/tmdb";
 import { GiStarSwirl } from "react-icons/gi";
 import { ImSpinner8 } from "react-icons/im";
+import { useLocation } from "react-router-dom";
 
 export default function Home() {
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [query, setQuery] = useState("");
-  const [page, setPage] = useState(1);
-  const [hasMore, setHasMore] = useState(true);
+  const [searchResults, setSearchResults] = useState<any[]>([]); // Movies to display
+  const [loading, setLoading] = useState(false); // Loading state
+  const [query, setQuery] = useState(""); // Current search query
+  const [page, setPage] = useState(1); // Pagination page
+  const [hasMore, setHasMore] = useState(true); // For infinite scroll
+
+  const location = useLocation();
+  const [welcomeMessage, setWelcomeMessage] = useState<string | null>(null); // Temporary welcome message
+
+  // Show welcome message if redirected with state
+  useEffect(() => {
+    if (location.state?.message) {
+      setWelcomeMessage(location.state.message);
+      const timer = setTimeout(() => setWelcomeMessage(null), 3000); // Auto-hide
+      return () => clearTimeout(timer);
+    }
+  }, [location.state]);
 
   // Filters
-  const [genre, setGenre] = useState("");
-  const [year, setYear] = useState<number | "">("");
+  const [genre, setGenre] = useState(""); // Selected genre filter
+  const [year, setYear] = useState<number | "">(""); // Selected year filter
 
   const genresList = [
+    // Available genres
     { id: 28, name: "Action" },
     { id: 12, name: "Adventure" },
     { id: 35, name: "Comedy" },
@@ -29,6 +43,7 @@ export default function Home() {
 
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Fetch movies from TMDB
   const fetchMovies = async (searchQuery: string, pageNum: number) => {
     setLoading(true);
 
@@ -37,24 +52,43 @@ export default function Home() {
       year: year ? Number(year) : undefined,
     });
 
-    if (pageNum === 1) setSearchResults(results);
-    else setSearchResults((prev) => [...prev, ...results]);
+    let filteredResults = results;
 
-    setHasMore(results.length > 0);
+    // Additional client-side filtering for search query
+    if (searchQuery && genre) {
+      filteredResults = results.filter((movie: { genre_ids: number[] }) =>
+        movie.genre_ids.includes(Number(genre))
+      );
+    }
+    if (searchQuery && year) {
+      filteredResults = filteredResults.filter(
+        (movie: { release_date: string }) =>
+          movie.release_date?.startsWith(String(year))
+      );
+    }
+
+    if (pageNum === 1)
+      setSearchResults(filteredResults); // Reset for new search
+    else setSearchResults((prev) => [...prev, ...filteredResults]); // Append for infinite scroll
+
+    setHasMore(filteredResults.length > 0); // Check if more results available
     setLoading(false);
   };
 
+  // Trigger search
   const handleSearch = (searchQuery: string) => {
     setQuery(searchQuery);
     setPage(1);
     fetchMovies(searchQuery, 1);
   };
 
+  // Apply genre/year filters
   const handleApplyFilters = () => {
     setPage(1);
-    fetchMovies(query, 1); // Will fetch based on current query + genre/year
+    fetchMovies(query, 1);
   };
 
+  // Load more movies on scroll
   const loadMore = () => {
     if (!hasMore || loading) return;
     const nextPage = page + 1;
@@ -62,6 +96,7 @@ export default function Home() {
     fetchMovies(query, nextPage);
   };
 
+  // Infinite scroll listener
   useEffect(() => {
     const handleScroll = () => {
       if (
@@ -100,7 +135,7 @@ export default function Home() {
         <button onClick={handleApplyFilters}>Apply</button>
       </div>
 
-      {/* Welcome Message */}
+      {/* Welcome Message / Hero Section */}
       {!loading && searchResults.length === 0 && query === "" && (
         <div className="center-piece">
           <GiStarSwirl size={70} color="#f39c12" />
@@ -126,6 +161,7 @@ export default function Home() {
         ))}
       </div>
 
+      {/* Loading Indicator */}
       {loading && (
         <div className="loading-indicator">
           <ImSpinner8 className="spinner" size={30} color="yellow" />
@@ -133,6 +169,7 @@ export default function Home() {
         </div>
       )}
 
+      {/* No results message */}
       {!loading && searchResults.length === 0 && query !== "" && (
         <div className="no-results-section">
           <div className="no-results-icon">🎬</div>

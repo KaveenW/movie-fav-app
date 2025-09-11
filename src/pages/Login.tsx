@@ -9,30 +9,51 @@ const Login = () => {
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>(
+    {}
+  );
+
   const navigate = useNavigate();
   const { user, setUser } = useUser();
 
-  // ✅ Redirect if already logged in
+  // Redirect if already logged in
   useEffect(() => {
     if (user) navigate("/");
   }, [user, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) return alert("Please fill in all fields.");
+
+    // Reset errors
+    setErrors({});
+
+    // Validate inputs
+    const newErrors: typeof errors = {};
+    if (!email) newErrors.email = "Please enter your email.";
+    if (!password) newErrors.password = "Please enter your password.";
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
 
     setIsLoading(true);
     try {
       const loggedInUser = await login(email, password);
       if (loggedInUser) {
-        alert(`Welcome back, ${loggedInUser.displayName || "User"}!`);
-        navigate("/");
+        setUser(loggedInUser);
+
+        navigate("/", {
+          state: {
+            message: `Welcome back, ${loggedInUser.displayName || "User"}!`,
+          },
+        });
       } else {
-        alert("Invalid email or password.");
+        setErrors({ password: "Invalid email or password." });
       }
     } catch (error) {
       console.error(error);
-      alert("Something went wrong.");
+      setErrors({ password: "Something went wrong. Please try again." });
     } finally {
       setIsLoading(false);
     }
@@ -43,13 +64,14 @@ const Login = () => {
       <div className="auth-box">
         <div className="auth-header">
           <Film className="auth-logo" />
-          <h1 className="auth-appname">CinemaHub</h1>
+          <h1 className="auth-appname">CineMax</h1>
           <h2 className="auth-title">Welcome Back</h2>
           <p className="auth-subtitle">Sign in to continue</p>
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
           <label>Email</label>
+          {errors.email && <p className="error-text">{errors.email}</p>}
           <input
             type="email"
             value={email}
@@ -59,6 +81,7 @@ const Login = () => {
           />
 
           <label>Password</label>
+          {errors.password && <p className="error-text">{errors.password}</p>}
           <div className="password-wrapper">
             <input
               type={showPassword ? "text" : "password"}
@@ -84,7 +107,7 @@ const Login = () => {
 
         <div className="demo-box">
           <h3>Demo Account</h3>
-          <p>Email: demo@moviefavs.com</p>
+          <p>Email: demo@cinemax.com</p>
           <p>Password: demo123</p>
         </div>
 

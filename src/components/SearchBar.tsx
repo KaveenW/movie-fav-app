@@ -1,25 +1,26 @@
-// src/components/SearchBar.tsx
 import { FormEvent, useState } from "react";
 import { FiSearch } from "react-icons/fi";
 
 type Props = {
-  onSearch?: (query: string) => void;
+  onSearch?: (query: string) => void; // Optional callback for parent component
 };
 
 export default function SearchBar({ onSearch }: Props) {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState(""); // Track search input
 
+  // Handle form submission
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (!query.trim()) return;
-    onSearch?.(query.trim());
+    if (!query.trim()) return; // Ignore empty queries
+    onSearch?.(query.trim()); // Trigger parent callback
   };
 
   return (
-    <section
-      className="hero"
-    >
+    <section className="hero">
+      {/* Hero title */}
       <h1>Discover Movies</h1>
+
+      {/* Hero description */}
       <p
         style={{
           maxWidth: "600px",
@@ -33,17 +34,18 @@ export default function SearchBar({ onSearch }: Props) {
         personal favorites collection
       </p>
 
+      {/* Search form */}
       <form className="search" onSubmit={handleSubmit}>
         <div className="input-wrap">
-          <FiSearch />
+          <FiSearch /> {/* Search icon */}
           <input
             type="text"
             value={query}
-            onChange={(e) => setQuery(e.target.value)}
+            onChange={(e) => setQuery(e.target.value)} // Update input state
             placeholder="Search for movies..."
           />
         </div>
-        <button type="submit">Search</button>
+        <button type="submit">Search</button> {/* Submit button */}
       </form>
     </section>
   );

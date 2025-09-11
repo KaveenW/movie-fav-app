@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Star, Calendar, Clock, Heart, Users } from "lucide-react";
 import {
   getMovieDetails,
@@ -36,6 +36,8 @@ type Movie = {
 
 export default function MovieDetails() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+
   const [movie, setMovie] = useState<Movie | null>(null);
   const [cast, setCast] = useState<CastMember[]>([]);
   const [recommendations, setRecommendations] = useState<Movie[]>([]);
@@ -47,7 +49,6 @@ export default function MovieDetails() {
     if (id) loadMovieDetails(parseInt(id));
   }, [id]);
 
-  // ✅ Track auth state
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setUserId(user ? user.uid : null);
@@ -55,7 +56,6 @@ export default function MovieDetails() {
     return () => unsubscribe();
   }, []);
 
-  // ✅ Check if movie is in favorites (only when movie + userId are loaded)
   useEffect(() => {
     const checkFavorite = async () => {
       if (!userId || !movie) return;
@@ -95,7 +95,6 @@ export default function MovieDetails() {
     dateString ? new Date(dateString).getFullYear() : "N/A";
   const formatRating = (rating: number) => (rating ? rating.toFixed(1) : "N/A");
 
-  // ✅ Firestore-based favorite toggling
   const toggleFavorite = async () => {
     if (!movie || !userId) {
       alert("Please log in to save favorites.");
@@ -134,9 +133,9 @@ export default function MovieDetails() {
       <div className="movie-details-loading">
         <div className="not-found">
           <h1>Movie Not Found</h1>
-          <Link to="/" className="btn-netflix">
-            Go Home
-          </Link>
+          <button onClick={() => navigate(-1)} className="btn-netflix">
+            Go Back
+          </button>
         </div>
       </div>
     );
@@ -162,8 +161,6 @@ export default function MovieDetails() {
               <div className="movie-hero-info">
                 <div className="movie-hero-header">
                   <h1>{movie.title}</h1>
-
-                  {/* ✅ Only show button if user is logged in */}
                 </div>
 
                 {movie.tagline && <p className="tagline">"{movie.tagline}"</p>}
@@ -189,10 +186,11 @@ export default function MovieDetails() {
           </div>
         </div>
 
+        {/* Updated Back Button */}
         <div className="back-link">
-          <Link to="/">
-            <ArrowLeft /> Back to Movies
-          </Link>
+          <button onClick={() => navigate(-1)} className="btn-back">
+            <ArrowLeft /> Back
+          </button>
         </div>
 
         <div className="fav-section">

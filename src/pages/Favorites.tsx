@@ -7,33 +7,32 @@ import { collection, getDocs, doc, deleteDoc } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 
 type Movie = {
-  id: number;
-  title: string;
-  posterUrl: string;
-  year?: string;
+  id: number; // Movie ID
+  title: string; // Movie title
+  posterUrl: string; // Poster image URL
+  year?: string; // Release year (optional)
 };
 
 const Favorites = () => {
-  const [favorites, setFavorites] = useState<Movie[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState<string | null>(null);
+  const [favorites, setFavorites] = useState<Movie[]>([]); // Store user's favorite movies
+  const [loading, setLoading] = useState(true); // Loading state
+  const [userId, setUserId] = useState<string | null>(null); // Firebase user ID
   const navigate = useNavigate();
 
-  // Watch auth state (check if user is logged in)
+  // Watch Firebase auth state
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        setUserId(user.uid);
-      } else {
-        setUserId(null);
-        setFavorites([]);
+      if (user) setUserId(user.uid); // Set user ID if logged in
+      else {
+        setUserId(null); // Reset if logged out
+        setFavorites([]); // Clear favorites
       }
     });
 
-    return () => unsubscribe();
+    return () => unsubscribe(); // Cleanup listener
   }, []);
 
-  // Load favorites from Firestore
+  // Fetch favorites from Firestore
   useEffect(() => {
     const fetchFavorites = async () => {
       if (!userId) {
@@ -50,31 +49,33 @@ const Favorites = () => {
           posterUrl: doc.data().posterUrl,
           year: doc.data().year,
         }));
-        setFavorites(movies);
+        setFavorites(movies); // Update state with fetched favorites
       } catch (error) {
         console.error("Error fetching favorites:", error);
       } finally {
-        setLoading(false);
+        setLoading(false); // Stop loading
       }
     };
 
     fetchFavorites();
   }, [userId]);
 
+  // Remove a movie from favorites
   const removeFavorite = async (id: number) => {
     if (!userId) return;
     try {
       await deleteDoc(doc(db, "users", userId, "favorites", String(id)));
-      setFavorites((prev) => prev.filter((movie) => movie.id !== id));
+      setFavorites((prev) => prev.filter((movie) => movie.id !== id)); // Update local state
     } catch (error) {
       console.error("Error removing favorite:", error);
     }
   };
 
   if (loading) {
-    return <p className="loading-text">Loading your favorites...</p>;
+    return <p className="loading-text">Loading your favorites...</p>; // Loading UI
   }
 
+  // If user is not logged in
   if (!userId) {
     return (
       <div className="no-favorites-container">
@@ -91,6 +92,7 @@ const Favorites = () => {
     );
   }
 
+  // If user has no favorites
   if (favorites.length === 0) {
     return (
       <div className="no-favorites-container">
@@ -108,7 +110,7 @@ const Favorites = () => {
 
   return (
     <div className="favorites-page">
-      {/* 🔙 Back Button */}
+      {/* Back button */}
       <button
         className="back-button"
         onClick={() => navigate(-1)}
@@ -128,6 +130,7 @@ const Favorites = () => {
               year={movie.year}
               posterUrl={movie.posterUrl}
             />
+            {/* Remove favorite button */}
             <button
               className="remove-fav-icon"
               onClick={() => removeFavorite(movie.id)}
